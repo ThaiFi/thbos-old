@@ -47,8 +47,14 @@ pub mod gas {
     /// - Economic: 1,000 microdollars = 0.001 USD = 0.1 cents
     pub const TEMPO_T1_BASE_FEE: u64 = 20_000_000_000;
 
-    /// TIP-1067 base fee cap: below the T1 fixed base fee.
-    pub const TEMPO_T7_BASE_FEE_CAP: u64 = 12_000_000_000;
+    /// TIP-1067 base fee cap (ThaiFi fork: raised from upstream 12e9 so the floor
+    /// prices a standard TIP-20 transfer at exactly 0.01 USD).
+    ///
+    /// At the floor (CAP/20 = 237,857,380,271), a standard TIP-20 transfer
+    /// (42,042 gas measured) costs 42,042 × 2.37857380271e11 = 9.99999998e15
+    /// attodollars; the 6-decimal charge rounds up to exactly 10,000,000 units
+    /// = 0.0100000000 USD.
+    pub const TEMPO_T7_BASE_FEE_CAP: u64 = 4_757_147_605_420;
 
     /// TIP-1067 base fee floor: one twentieth of the TIP-1067 cap.
     pub const TEMPO_T7_BASE_FEE_FLOOR: u64 = TEMPO_T7_BASE_FEE_CAP / 20;
