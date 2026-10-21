@@ -47,17 +47,22 @@ pub mod gas {
     /// - Economic: 1,000 microdollars = 0.001 USD = 0.1 cents
     pub const TEMPO_T1_BASE_FEE: u64 = 20_000_000_000;
 
-    /// TIP-1067 base fee cap (ThaiFi fork: raised from upstream 12e9 so the floor
-    /// prices a standard TIP-20 transfer at exactly 0.01 USD).
-    ///
-    /// At the floor (CAP/20 = 237,857,380,271), a standard TIP-20 transfer
-    /// (42,042 gas measured) costs 42,042 × 2.37857380271e11 = 9.99999998e15
-    /// attodollars; the 6-decimal charge rounds up to exactly 10,000,000 units
-    /// = 0.0100000000 USD.
-    pub const TEMPO_T7_BASE_FEE_CAP: u64 = 4_757_147_605_420;
+    /// TIP-1067 base fee cap: below the T1 fixed base fee.
+    pub const TEMPO_T7_BASE_FEE_CAP: u64 = 12_000_000_000;
 
     /// TIP-1067 base fee floor: one twentieth of the TIP-1067 cap.
     pub const TEMPO_T7_BASE_FEE_FLOOR: u64 = TEMPO_T7_BASE_FEE_CAP / 20;
+
+    /// THBOS (ThaiFi) base fee cap, applied from the `thbosTime` genesis switch:
+    /// prices a standard TIP-20 transfer at exactly 0.01 USD at the floor.
+    ///
+    /// At the floor (CAP/20 = 237,857,380,271), a standard TIP-20 transfer
+    /// (42,042 gas measured) charges exactly 10,000,000 units (6 decimals)
+    /// = 0.0100000000 USD.
+    pub const THBOS_BASE_FEE_CAP: u64 = 4_757_147_605_420;
+
+    /// THBOS base fee floor: one twentieth of the THBOS cap.
+    pub const THBOS_BASE_FEE_FLOOR: u64 = THBOS_BASE_FEE_CAP / 20;
 
     /// TIP-1067 gas target for the dynamic base fee controller.
     pub const TEMPO_T7_BASE_FEE_GAS_TARGET: u64 = 10_000_000;
@@ -71,18 +76,35 @@ pub mod gas {
     /// [TIP-1067]: <https://docs.tempo.xyz/protocol/tips/tip-1067>
     pub const TEMPO_T7_BASE_FEE_PARAMS: BaseFeeParams = BaseFeeParams::new(8, 1);
 
-    /// Returns the TIP-1067 base fee for the child of a block.
-    ///
-    /// The update follows EIP-1559's integer formula against a fixed 10M gas target, then clamps the
-    /// result to `[TEMPO_T7_BASE_FEE_FLOOR, TEMPO_T7_BASE_FEE_CAP]`.
-    pub fn tempo_t7_next_block_base_fee(parent_base_fee: u64, parent_gas_used: u64) -> u64 {
+    /// Returns the TIP-1067 base fee for the child of a block, clamped to the
+    /// given `[floor, cap]` range (upstream values by default; THBOS values
+    /// after the `thbosTime` genesis switch).
+    pub fn tempo_t7_next_block_base_fee_in(
+        parent_base_fee: u64,
+        parent_gas_used: u64,
+        floor: u64,
+        cap: u64,
+    ) -> u64 {
         TEMPO_T7_BASE_FEE_PARAMS
             .next_block_base_fee(
                 parent_gas_used,
                 TEMPO_T7_BASE_FEE_GAS_TARGET,
                 parent_base_fee,
             )
-            .clamp(TEMPO_T7_BASE_FEE_FLOOR, TEMPO_T7_BASE_FEE_CAP)
+            .clamp(floor, cap)
+    }
+
+    /// Returns the TIP-1067 base fee for the child of a block.
+    ///
+    /// The update follows EIP-1559's integer formula against a fixed 10M gas target, then clamps the
+    /// result to `[TEMPO_T7_BASE_FEE_FLOOR, TEMPO_T7_BASE_FEE_CAP]`.
+    pub fn tempo_t7_next_block_base_fee(parent_base_fee: u64, parent_gas_used: u64) -> u64 {
+        tempo_t7_next_block_base_fee_in(
+            parent_base_fee,
+            parent_gas_used,
+            TEMPO_T7_BASE_FEE_FLOOR,
+            TEMPO_T7_BASE_FEE_CAP,
+        )
     }
     /// [TIP-1010] general (non-payment) gas limit: 30 million gas per block.
     /// Cap for non-payment transactions.
