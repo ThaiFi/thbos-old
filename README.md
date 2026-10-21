@@ -6,11 +6,14 @@ We keep the fork as small as possible: everything except the base-fee schedule f
 
 ## What's different from upstream
 
-One constant — the T7 base-fee schedule (TIP-1067 mechanics unchanged):
+One feature — an optional `thbosTime` genesis field that switches the T7 base-fee schedule (TIP-1067 mechanics unchanged):
 
-- `TEMPO_T7_BASE_FEE_CAP` = **4,757,147,605,420** attodollars (`crates/hardfork/src/constants.rs`)
-- Floor = CAP/20 = 237,857,380,271 → a standard TIP-20 transfer (42,042 gas) costs **exactly 0.01 USD**
+- Before `thbosTime`: upstream values (floor 600,000,000 / cap 12,000,000,000 attodollars)
+- From `thbosTime` onward: `THBOS_BASE_FEE_CAP` = 4,757,147,605,420 → floor = CAP/20 = 237,857,380,271 → a standard TIP-20 transfer (42,042 gas) costs **exactly 0.01 USD**
 - Under congestion the base fee rises toward the cap (0.20 USD per transfer, 20×) and decays back to the floor automatically
+- Because the switch is timestamp-gated in consensus, nodes can sync from genesis across it and operators can upgrade rolling — no coordinated stop
+
+Everything else follows upstream Tempo.
 
 ## Images
 
